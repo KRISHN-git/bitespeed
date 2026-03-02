@@ -122,30 +122,34 @@ export class IdentityService {
   }
 
   private buildResponse(contacts: Contact[]): IdentifyOutput {
-    const primary = contacts.find((c) => c.linkPrecedence === "primary")!;
-    const secondaries = contacts.filter((c) => c.linkPrecedence === "secondary");
+  const primary = contacts.find((c) => c.linkPrecedence === "primary")!;
+  const secondaries = contacts.filter((c) => c.linkPrecedence === "secondary");
 
-    const emails = [
-      ...(primary.email ? [primary.email] : []),
-      ...secondaries
-        .map((c) => c.email)
-        .filter((e): e is string => !!e && e !== primary.email),
-    ];
+  const allEmails = contacts
+    .map((c) => c.email)
+    .filter((e): e is string => !!e);
 
-    const phoneNumbers = [
-      ...(primary.phoneNumber ? [primary.phoneNumber] : []),
-      ...secondaries
-        .map((c) => c.phoneNumber)
-        .filter((p): p is string => !!p && p !== primary.phoneNumber),
-    ];
+  const allPhones = contacts
+    .map((c) => c.phoneNumber)
+    .filter((p): p is string => !!p);
 
-    return {
-      contact: {
-        primaryContatctId: primary.id,
-        emails,
-        phoneNumbers,
-        secondaryContactIds: secondaries.map((c) => c.id),
-      },
-    };
-  }
+  const emails = [
+    ...(primary.email ? [primary.email] : []),
+    ...allEmails.filter((e) => e !== primary.email),
+  ].filter((v, i, arr) => arr.indexOf(v) === i);
+
+  const phoneNumbers = [
+    ...(primary.phoneNumber ? [primary.phoneNumber] : []),
+    ...allPhones.filter((p) => p !== primary.phoneNumber),
+  ].filter((v, i, arr) => arr.indexOf(v) === i);
+
+  return {
+    contact: {
+      primaryContatctId: primary.id,
+      emails,
+      phoneNumbers,
+      secondaryContactIds: secondaries.map((c) => c.id),
+    },
+  };
+}
 }
